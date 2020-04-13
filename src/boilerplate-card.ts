@@ -1,18 +1,9 @@
 import { LitElement, html, customElement, property, CSSResult, TemplateResult, css, PropertyValues } from 'lit-element';
-import {
-  HomeAssistant,
-  hasConfigOrEntityChanged,
-  hasAction,
-  ActionHandlerEvent,
-  handleAction,
-  LovelaceCardEditor,
-  getLovelace,
-} from 'custom-card-helpers';
+import { HomeAssistant, hasConfigOrEntityChanged, LovelaceCardEditor, getLovelace } from 'custom-card-helpers';
 
 import './editor';
 
 import { BoilerplateCardConfig } from './types';
-import { actionHandler } from './action-handler-directive';
 import { CARD_VERSION } from './const';
 
 import { localize } from './localize/localize';
@@ -74,24 +65,15 @@ export class BoilerplateCard extends LitElement {
     }
 
     return html`
-      <ha-card
-        .header=${this._config.name}
-        @action=${this._handleAction}
-        .actionHandler=${actionHandler({
-          hasHold: hasAction(this._config.hold_action),
-          hasDoubleTap: hasAction(this._config.double_tap_action),
-          repeat: this._config.hold_action ? this._config.hold_action.repeat : undefined,
-        })}
-        tabindex="0"
-        aria-label=${`Boilerplate: ${this._config.entity}`}
-      ></ha-card>
+      <ha-card>
+        <paper-tabs selected="0" scrollable>
+          <paper-tab>Tab 0</paper-tab>
+          <paper-tab>Tab 1</paper-tab>
+          <paper-tab>Tab 2</paper-tab>
+          <paper-tab>Tab 3</paper-tab>
+        </paper-tabs>
+      </ha-card>
     `;
-  }
-
-  private _handleAction(ev: ActionHandlerEvent): void {
-    if (this.hass && this._config && ev.detail.action) {
-      handleAction(this, this.hass, this._config, ev.detail.action);
-    }
   }
 
   static get styles(): CSSResult {
