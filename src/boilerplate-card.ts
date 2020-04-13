@@ -66,11 +66,11 @@ export class BoilerplateCard extends LitElement {
 
     return html`
       <ha-card>
-        <paper-tabs selected="0" scrollable>
-          <paper-tab>Tab 0</paper-tab>
-          <paper-tab>Tab 1</paper-tab>
-          <paper-tab>Tab 2</paper-tab>
-          <paper-tab>Tab 3</paper-tab>
+        <paper-tabs attr-for-selected="home-floor" selected="ground" scrollable>
+          <paper-tab home-floor="basement">Tab 0</paper-tab>
+          <paper-tab home-floor="ground">Tab 1</paper-tab>
+          <paper-tab home-floor="upper">Tab 2</paper-tab>
+          <paper-tab home-floor="loft">Tab 3</paper-tab>
         </paper-tabs>
       </ha-card>
     `;
@@ -83,6 +83,9 @@ export class BoilerplateCard extends LitElement {
         color: black;
         background-color: #fce588;
         padding: 8px;
+      }
+      paper-tabs {
+        --paper-tabs-selection-bar-color: var(--tabs-colour, red);
       }
     `;
   }
