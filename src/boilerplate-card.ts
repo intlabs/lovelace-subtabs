@@ -1,4 +1,5 @@
 import { LitElement, html, customElement, property, CSSResult, TemplateResult, css, PropertyValues } from 'lit-element';
+import { repeat } from 'lit-html/directives/repeat';
 import {
   HomeAssistant,
   hasConfigOrEntityChanged,
@@ -8,8 +9,6 @@ import {
   LovelaceCardEditor,
   getLovelace,
 } from 'custom-card-helpers';
-
-import './editor';
 
 import { BoilerplateCardConfig } from './types';
 import { actionHandler } from './action-handler-directive';
@@ -41,7 +40,7 @@ export class BoilerplateCard extends LitElement {
 
   public setConfig(config: BoilerplateCardConfig): void {
     // TODO Check for required fields and that they are of the proper format
-    if (!config || config.show_error) {
+    if (!config || !config.entity) {
       throw new Error(localize('common.invalid_configuration'));
     }
 
@@ -64,8 +63,9 @@ export class BoilerplateCard extends LitElement {
       return html``;
     }
 
+    const stateObj = this.hass.states[this._config.entity];
     // TODO Check for stateObj or other necessary things and render a warning if missing
-    if (this._config.show_warning) {
+    if (!stateObj) {
       return html`
         <ha-card>
           <div class="warning">${localize('common.show_warning')}</div>
@@ -75,7 +75,6 @@ export class BoilerplateCard extends LitElement {
 
     return html`
       <ha-card
-        .header=${this._config.name}
         @action=${this._handleAction}
         .actionHandler=${actionHandler({
           hasHold: hasAction(this._config.hold_action),
@@ -84,7 +83,22 @@ export class BoilerplateCard extends LitElement {
         })}
         tabindex="0"
         aria-label=${`Boilerplate: ${this._config.entity}`}
-      ></ha-card>
+      >
+        <paper-dropdown-menu
+          selected-item-label="${stateObj.state}"
+          @selected-item-label-changed="${this._selectedChanged}"
+        >
+          <paper-listbox slot="dropdown-content" selected="${stateObj.attributes.options.indexOf(stateObj.state)}">
+            ${repeat(
+              stateObj.attributes.options,
+              option =>
+                html`
+                  <paper-item>${option}</paper-item>
+                `,
+            )}
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </ha-card>
     `;
   }
 
@@ -103,5 +117,18 @@ export class BoilerplateCard extends LitElement {
         padding: 8px;
       }
     `;
+  }
+
+  private _selectedChanged(ev): void {
+    const stateObj = this.hass!.states[this._config!.entity];
+    const option = ev.target.selectedItem.innerText.trim();
+    if (option === stateObj.state) {
+      return;
+    }
+
+    this.hass!.callService('input_select', 'select_option', {
+      option,
+      entity_id: stateObj.entity_id,
+    });
   }
 }
