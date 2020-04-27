@@ -1,17 +1,8 @@
 import { LitElement, html, customElement, property, CSSResult, TemplateResult, css, PropertyValues } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
-import {
-  HomeAssistant,
-  hasConfigOrEntityChanged,
-  hasAction,
-  ActionHandlerEvent,
-  handleAction,
-  LovelaceCardEditor,
-  getLovelace,
-} from 'custom-card-helpers';
+import { HomeAssistant, hasConfigOrEntityChanged, LovelaceCardEditor, getLovelace } from 'custom-card-helpers';
 
 import { BoilerplateCardConfig } from './types';
-import { actionHandler } from './action-handler-directive';
 import { CARD_VERSION } from './const';
 
 import { localize } from './localize/localize';
@@ -74,38 +65,23 @@ export class BoilerplateCard extends LitElement {
     }
 
     return html`
-      <ha-card
-        @action=${this._handleAction}
-        .actionHandler=${actionHandler({
-          hasHold: hasAction(this._config.hold_action),
-          hasDoubleTap: hasAction(this._config.double_tap_action),
-          repeat: this._config.hold_action ? this._config.hold_action.repeat : undefined,
-        })}
-        tabindex="0"
-        aria-label=${`Boilerplate: ${this._config.entity}`}
-      >
-        <paper-dropdown-menu
-          selected-item-label="${stateObj.state}"
-          @selected-item-label-changed="${this._selectedChanged}"
+      <ha-card tabindex="0" aria-label=${`Boilerplate: ${this._config.entity}`}>
+        <paper-tabs
+          attr-for-selected="zone"
+          selected="${stateObj.state}"
+          scrollable
+          @selected-item-changed=${this._selectedChanged}
         >
-          <paper-listbox slot="dropdown-content" selected="${stateObj.attributes.options.indexOf(stateObj.state)}">
-            ${repeat(
-              stateObj.attributes.options,
-              option =>
-                html`
-                  <paper-item>${option}</paper-item>
-                `,
-            )}
-          </paper-listbox>
-        </paper-dropdown-menu>
+          ${repeat(
+            stateObj.attributes.options,
+            option =>
+              html`
+                <paper-tab zone="${option}">${option}</paper-tab>
+              `,
+          )}
+        </paper-tabs>
       </ha-card>
     `;
-  }
-
-  private _handleAction(ev: ActionHandlerEvent): void {
-    if (this.hass && this._config && ev.detail.action) {
-      handleAction(this, this.hass, this._config, ev.detail.action);
-    }
   }
 
   static get styles(): CSSResult {
@@ -116,12 +92,15 @@ export class BoilerplateCard extends LitElement {
         background-color: #fce588;
         padding: 8px;
       }
+      paper-tabs {
+        --paper-tabs-selection-bar-color: var(--primary-color);
+      }
     `;
   }
 
   private _selectedChanged(ev): void {
     const stateObj = this.hass!.states[this._config!.entity];
-    const option = ev.target.selectedItem.innerText.trim();
+    const option = ev.target.selected.trim();
     if (option === stateObj.state) {
       return;
     }
